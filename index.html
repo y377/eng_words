@@ -13,9 +13,9 @@
 </head>
 <style>
     .list-group-numbered>.list-group-item::before {
-    color: #adb5bd;
-    font-size: 1rem;
-  }
+        color: #adb5bd;
+        font-size: 1rem;
+    }
 </style>
 
 <body class="p-4">
@@ -36,10 +36,12 @@
             <select id="pageSize" class="form-select w-auto d-inline">
                 <option value="5">5</option>
                 <option value="10" selected>10</option>
-                <option value="15">15</option>
+                <option value="20">20</option>
             </select>
             个单词
         </div>
+        <!-- 月份选择下拉（动态生成） -->
+        <div class="mb-3" id="monthContainer"></div>
         <!-- 单词列表 -->
         <ol class="list-group list-group-numbered list-group-flush fs-4" id="wordList"></ol>
         <!-- 按钮 -->
@@ -50,121 +52,129 @@
         </div>
     </div>
     <script>
-    let words = [];
-    let currentPage = 0;
-    let pageSize = parseInt(document.getElementById('pageSize').value);
-    let answerShown = false;
+        let words = [];
+        let currentPage = 0;
+        let pageSize = parseInt(document.getElementById('pageSize').value);
+        let answerShown = false;
 
-    // 获取当前模式（英文→中文 or 中文→英文）
-    function getMode() {
-        const activeTab = document.querySelector('#modeTabs .nav-link.active');
-        return activeTab.id === 'en-tab' ? 'en' : 'zh';
-    }
-
-    // 渲染单词页面
-    function renderPage() {
-        const list = document.getElementById('wordList');
-        list.innerHTML = '';
-        pageSize = parseInt(document.getElementById('pageSize').value);
-        const start = currentPage * pageSize;
-        const pageWords = words.slice(start, start + pageSize);
-        const mode = getMode();
-
-        pageWords.forEach(word => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-grid gap-2 align-items-center';
-            li.style.gridTemplateColumns = 'max-content 1fr'; // 左列自适应，右列占剩余
-            li.innerHTML = `
-      <span>${mode === 'en' ? word.en : word.zh}</span>
-      <span class="answer text-success">${mode === 'en' ? word.zh : word.en}</span>
-    `;
-            list.appendChild(li);
-        });
-
-        // 根据当前状态决定是否隐藏答案
-        if (!answerShown) hideAnswers();
-    }
-
-    // 显示/隐藏答案 & 切换按钮文字
-    function toggleAnswer() {
-        answerShown = !answerShown;
-        document.querySelectorAll('.answer').forEach(el => {
-            el.style.display = answerShown ? 'inline' : 'none';
-        });
-        document.getElementById('showAnswerBtn').textContent = answerShown ? '关闭答案' : '显示答案';
-    }
-
-    // 隐藏答案
-    function hideAnswers() {
-        document.querySelectorAll('.answer').forEach(el => el.style.display = 'none');
-        answerShown = false;
-    }
-
-    // 上一页
-    function prevPage() {
-        if (currentPage > 0) {
-            currentPage--;
-            renderPage();
+        // 获取当前模式
+        function getMode() {
+            const activeTab = document.querySelector('#modeTabs .nav-link.active');
+            return activeTab.id === 'en-tab' ? 'en' : 'zh';
         }
-    }
 
-    // 下一页
-    function nextPage() {
-        if ((currentPage + 1) * pageSize < words.length) {
-            currentPage++;
-            renderPage();
+        // 渲染单词
+        function renderPage() {
+            const list = document.getElementById('wordList');
+            list.innerHTML = '';
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            const start = currentPage * pageSize;
+            const pageWords = words.slice(start, start + pageSize);
+            const mode = getMode();
+
+            pageWords.forEach(word => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.innerHTML = `
+                    <span class="px-3 lh-lg">${mode === 'en' ? word.en : word.zh}</span>
+                    <span class="px-5 answer text-success lh-lg">${mode === 'en' ? word.zh : word.en}</span>
+                `;
+                list.appendChild(li);
+            });
+
+            if (!answerShown) hideAnswers();
         }
-    }
 
-    // 加载 YAML 文件
-    async function loadWords(month) {
-        const url = `words/${month}.yaml`; // 相对路径
-        try {
-            const res = await fetch(url);
-            const text = await res.text();
-            words = jsyaml.load(text);
-            currentPage = 0; // 切换月份重置页码
+        // 显示/隐藏答案
+        function toggleAnswer() {
+            answerShown = !answerShown;
+            document.querySelectorAll('.answer').forEach(el => {
+                el.style.display = answerShown ? 'inline' : 'none';
+            });
+            document.getElementById('showAnswerBtn').textContent = answerShown ? '关闭答案' : '显示答案';
+        }
+
+        function hideAnswers() {
+            document.querySelectorAll('.answer').forEach(el => el.style.display = 'none');
             answerShown = false;
-            document.getElementById('showAnswerBtn').textContent = '显示答案';
-            renderPage();
-        } catch (err) {
-            alert('加载单词失败，请检查 YAML 文件路径或格式');
-            console.error(err);
         }
-    }
 
-    // 事件绑定
-    document.getElementById('showAnswerBtn').addEventListener('click', toggleAnswer);
-    document.getElementById('nextPageBtn').addEventListener('click', nextPage);
-    document.getElementById('prevPageBtn').addEventListener('click', prevPage);
-    document.getElementById('pageSize').addEventListener('change', () => {
-        currentPage = 0;
-        renderPage();
-    });
-    document.querySelectorAll('#modeTabs .nav-link').forEach(tab => {
-        tab.addEventListener('shown.bs.tab', () => renderPage());
-    });
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                renderPage();
+            }
+        }
 
-    // 月份下拉选择
-    const monthSelect = document.createElement('select');
-    monthSelect.id = 'monthSelect';
-    monthSelect.className = 'form-select w-auto d-inline mb-3';
-    const months = ['2025-08', '2025-09']; // 可根据实际添加更多月份
-    months.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m;
-        opt.textContent = m;
-        monthSelect.appendChild(opt);
-    });
-    document.querySelector('.container').insertBefore(monthSelect, document.getElementById('wordList'));
+        function nextPage() {
+            if ((currentPage + 1) * pageSize < words.length) {
+                currentPage++;
+                renderPage();
+            }
+        }
 
-    monthSelect.addEventListener('change', e => loadWords(e.target.value));
+        // 加载 YAML 文件
+        async function loadWords(month) {
+            try {
+                const res = await fetch(`words/${month}.yaml`);
+                const text = await res.text();
+                words = jsyaml.load(text);
+                currentPage = 0;
+                answerShown = false;
+                document.getElementById('showAnswerBtn').textContent = '显示答案';
+                renderPage();
+            } catch (err) {
+                alert('加载单词失败，请检查 YAML 文件路径或格式');
+                console.error(err);
+            }
+        }
 
-    // 初始化加载当前月份
-    const today = new Date();
-    const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2,'0')}`;
-    monthSelect.value = defaultMonth;
-    loadWords(defaultMonth);
+        // 加载月份列表
+        async function loadMonthList() {
+            try {
+                const res = await fetch('words/list.json');
+                const files = await res.json();
+                const months = files.map(f => f.replace('.yaml',''));
+                const container = document.getElementById('monthContainer');
+
+                const select = document.createElement('select');
+                select.id = 'monthSelect';
+                select.className = 'form-select w-auto d-inline';
+                months.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    select.appendChild(opt);
+                });
+                container.appendChild(select);
+
+                // 默认选中当前月份
+                const today = new Date();
+                const defaultMonth = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+                select.value = months.includes(defaultMonth) ? defaultMonth : months[0];
+                loadWords(select.value);
+
+                select.addEventListener('change', e => loadWords(e.target.value));
+            } catch(err) {
+                alert('加载月份列表失败，请检查 words/list.json');
+                console.error(err);
+            }
+        }
+
+        // 事件绑定
+        document.getElementById('showAnswerBtn').addEventListener('click', toggleAnswer);
+        document.getElementById('nextPageBtn').addEventListener('click', nextPage);
+        document.getElementById('prevPageBtn').addEventListener('click', prevPage);
+        document.getElementById('pageSize').addEventListener('change', () => {
+            currentPage = 0;
+            renderPage();
+        });
+        document.querySelectorAll('#modeTabs .nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', renderPage);
+        });
+
+        // 初始化加载月份
+        loadMonthList();
     </script>
 </body>
 
