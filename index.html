@@ -30,6 +30,10 @@
                 <a class="nav-link fs-5" id="zh-tab" data-bs-toggle="tab" data-bs-target="#zh" type="button" role="tab">中文<i class="bi bi-arrow-right px-3"></i>英文</a>
             </li>
         </ul>
+
+        <!-- 月份下拉菜单 (动态生成) -->
+        <div class="mb-3" id="monthContainer"></div>
+
         <!-- 页面选择 -->
         <div class="mb-3">
             每页显示：
@@ -40,10 +44,10 @@
             </select>
             个单词
         </div>
-        <!-- 月份选择下拉（动态生成） -->
-        <div class="mb-3" id="monthContainer"></div>
+
         <!-- 单词列表 -->
         <ol class="list-group list-group-numbered list-group-flush fs-4" id="wordList"></ol>
+
         <!-- 按钮 -->
         <div class="mt-3 text-end">
             <button class="btn btn-primary me-2" id="showAnswerBtn">显示答案</button>
@@ -51,19 +55,36 @@
             <button class="btn btn-secondary" id="nextPageBtn">下一页</button>
         </div>
     </div>
+
     <script>
         let words = [];
         let currentPage = 0;
         let pageSize = parseInt(document.getElementById('pageSize').value);
         let answerShown = false;
 
-        // 获取当前模式
+        // 你的 YAML 文件列表，动态生成下拉菜单
+        const months = ["2025-08", "2025-09"]; // 每个月对应一个 YAML 文件
+
+        // 渲染月份下拉菜单
+        const monthContainer = document.getElementById('monthContainer');
+        const monthSelect = document.createElement('select');
+        monthSelect.id = 'monthSelect';
+        monthSelect.className = 'form-select w-auto d-inline mb-3';
+        months.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            monthSelect.appendChild(opt);
+        });
+        monthContainer.appendChild(monthSelect);
+
+        // 获取当前模式（英文→中文 or 中文→英文）
         function getMode() {
             const activeTab = document.querySelector('#modeTabs .nav-link.active');
             return activeTab.id === 'en-tab' ? 'en' : 'zh';
         }
 
-        // 渲染单词
+        // 渲染单词页面
         function renderPage() {
             const list = document.getElementById('wordList');
             list.innerHTML = '';
@@ -85,7 +106,7 @@
             if (!answerShown) hideAnswers();
         }
 
-        // 显示/隐藏答案
+        // 显示/隐藏答案 & 切换按钮文字
         function toggleAnswer() {
             answerShown = !answerShown;
             document.querySelectorAll('.answer').forEach(el => {
@@ -94,11 +115,13 @@
             document.getElementById('showAnswerBtn').textContent = answerShown ? '关闭答案' : '显示答案';
         }
 
+        // 隐藏答案
         function hideAnswers() {
             document.querySelectorAll('.answer').forEach(el => el.style.display = 'none');
             answerShown = false;
         }
 
+        // 上一页
         function prevPage() {
             if (currentPage > 0) {
                 currentPage--;
@@ -106,6 +129,7 @@
             }
         }
 
+        // 下一页
         function nextPage() {
             if ((currentPage + 1) * pageSize < words.length) {
                 currentPage++;
@@ -115,48 +139,17 @@
 
         // 加载 YAML 文件
         async function loadWords(month) {
+            const url = `words/${month}.yaml`;
             try {
-                const res = await fetch(`words/${month}.yaml`);
+                const res = await fetch(url);
                 const text = await res.text();
-                words = jsyaml.load(text);
+                words = jsyaml.load(text); // words = [{en:'apple', zh:'苹果'}, ...]
                 currentPage = 0;
                 answerShown = false;
                 document.getElementById('showAnswerBtn').textContent = '显示答案';
                 renderPage();
             } catch (err) {
                 alert('加载单词失败，请检查 YAML 文件路径或格式');
-                console.error(err);
-            }
-        }
-
-        // 加载月份列表
-        async function loadMonthList() {
-            try {
-                const res = await fetch('words/list.json');
-                const files = await res.json();
-                const months = files.map(f => f.replace('.yaml',''));
-                const container = document.getElementById('monthContainer');
-
-                const select = document.createElement('select');
-                select.id = 'monthSelect';
-                select.className = 'form-select w-auto d-inline';
-                months.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m;
-                    opt.textContent = m;
-                    select.appendChild(opt);
-                });
-                container.appendChild(select);
-
-                // 默认选中当前月份
-                const today = new Date();
-                const defaultMonth = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-                select.value = months.includes(defaultMonth) ? defaultMonth : months[0];
-                loadWords(select.value);
-
-                select.addEventListener('change', e => loadWords(e.target.value));
-            } catch(err) {
-                alert('加载月份列表失败，请检查 words/list.json');
                 console.error(err);
             }
         }
@@ -170,11 +163,12 @@
             renderPage();
         });
         document.querySelectorAll('#modeTabs .nav-link').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', renderPage);
+            tab.addEventListener('shown.bs.tab', () => renderPage());
         });
+        monthSelect.addEventListener('change', e => loadWords(e.target.value));
 
-        // 初始化加载月份
-        loadMonthList();
+        // 初始化加载第一个月份
+        loadWords(months[0]);
     </script>
 </body>
 
