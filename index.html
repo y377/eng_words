@@ -1,280 +1,267 @@
 <!doctype html>
 <html lang="zh-CN">
-
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="color-scheme" content="light dark" />
-  <title>英语默写练习</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f4f5f1">
+  <meta name="description" content="按月整理的英语词汇默写练习，支持英中互测与答案显隐。">
+  <title>词汇默写 · 英语练习</title>
   <script src="https://cdn.bootcdn.net/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
   <style>
     :root {
-      --bg: #f3f4f7;
-      --card: #ffffff;
-      --fg: #16181d;
-      --muted: #8a9099;
-      --line: #e7e9ee;
-      --accent: #2f6bff;
-      --accent-soft: #e9f0ff;
-      --shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 10px 28px rgba(16, 24, 40, .06);
-      --radius: 16px;
+      color-scheme: light dark;
+      --page: #f4f5f1;
+      --surface: #fff;
+      --surface-2: #edf0e9;
+      --ink: #20251f;
+      --muted: #737b70;
+      --line: #dfe4da;
+      --accent: #315f48;
+      --accent-ink: #fff;
+      --accent-wash: #e5eee7;
+      --focus: #bd6e33;
+      --shadow: 0 8px 24px rgba(36, 49, 38, .055);
+      --radius: 18px;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0e1116;
-        --card: #171b22;
-        --fg: #e9ebef;
-        --muted: #868c96;
-        --line: #232936;
-        --accent: #6b93ff;
-        --accent-soft: #1b2436;
-        --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 12px 32px rgba(0, 0, 0, .4);
+        --page: #171b18;
+        --surface: #202722;
+        --surface-2: #29322c;
+        --ink: #edf1ea;
+        --muted: #a0aa9f;
+        --line: #354039;
+        --accent: #a4c8ad;
+        --accent-ink: #17221b;
+        --accent-wash: #2a3a30;
+        --focus: #e2a56f;
+        --shadow: 0 8px 24px rgba(0, 0, 0, .16);
       }
     }
-
     * { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
-
+    html { min-width: 320px; -webkit-text-size-adjust: 100%; scroll-padding-top: 170px; }
     body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font: 16px/1.6 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
-      padding-bottom: calc(88px + env(safe-area-inset-bottom));
-      -webkit-tap-highlight-color: transparent;
+      min-width: 320px; margin: 0; color: var(--ink); background: var(--page);
+      font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      padding-bottom: calc(92px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent;
     }
-
-    .wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: var(--bg);
-      border-bottom: 1px solid var(--line);
-      padding-top: env(safe-area-inset-top);
+    button, select { font: inherit; color: inherit; }
+    button { touch-action: manipulation; }
+    button:focus-visible, select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .shell { width: min(100% - 32px, 720px); margin-inline: auto; }
+    .topbar {
+      position: sticky; inset-block-start: 0; z-index: 10;
+      padding-top: env(safe-area-inset-top); background: color-mix(in srgb, var(--page) 94%, transparent);
+      border-bottom: 1px solid var(--line); backdrop-filter: blur(14px);
     }
-    .head-inner { display: flex; align-items: baseline; gap: 10px; padding: 14px 16px; max-width: 680px; margin: 0 auto; }
-    h1 { font-size: 1.05rem; font-weight: 650; margin: 0; letter-spacing: .01em; }
-    .count { color: var(--muted); font-size: .82rem; margin-left: auto; }
-
-    .controls { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 0 6px; }
-    .field { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; }
-    .field label { color: var(--muted); font-size: .8rem; }
+    .top-inner { width: min(100% - 32px, 720px); margin-inline: auto; }
+    .heading { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h1 { margin: 0; font-size: 1.08rem; line-height: 1.25; font-weight: 720; letter-spacing: .01em; }
+    .eyebrow { display: block; margin-bottom: 2px; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+    .count { flex: none; color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+    .controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 0 0 12px; }
+    .control-label { display: block; margin: 0 0 4px 3px; color: var(--muted); font-size: .7rem; font-weight: 650; }
+    .select-wrap { min-width: 0; }
     select {
-      border: 0; background: transparent; color: var(--fg); font: inherit;
-      font-size: .9rem; padding: 4px 2px; outline: none; max-width: 42vw;
+      width: 100%; min-height: 44px; padding: 0 34px 0 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: var(--surface); appearance: none; font-size: .9rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23737b70' stroke-width='1.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
     }
-
-    .seg { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
-    .seg button {
-      border: 0; background: transparent; color: var(--muted); font: inherit; font-size: .88rem;
-      padding: 6px 14px; border-radius: 9px; cursor: pointer;
+    .control-row { display: grid; grid-template-columns: minmax(0, 1fr) 94px; gap: 8px; grid-column: 1 / -1; }
+    .segmented { min-height: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .segmented button { min-width: 0; padding: 0 5px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: .83rem; font-weight: 620; cursor: pointer; }
+    .segmented button[aria-pressed="true"] { color: var(--accent); background: var(--accent-wash); }
+    main { padding-top: 18px; }
+    .section-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .section-line h2 { margin: 0; font-size: .78rem; color: var(--muted); font-weight: 650; }
+    .hint { color: var(--muted); font-size: .73rem; }
+    .word-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+    .word-card { min-width: 0; }
+    .word-button {
+      width: 100%; min-height: 76px; display: grid; grid-template-columns: 36px minmax(0, 1fr) 24px; align-items: center; gap: 12px;
+      padding: 13px 15px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+      text-align: left; cursor: pointer; box-shadow: var(--shadow); transition: border-color .16s ease, background .16s ease, transform .16s ease;
     }
-    .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-
-    .word-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-
-    .card {
-      display: grid;
-      grid-template-columns: 34px 1fr auto;
-      align-items: center;
-      gap: 12px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 15px 16px;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: border-color .15s ease, transform .06s ease;
-    }
-    .card:active { transform: scale(.995); }
-    .card.revealed { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
-
-    .idx { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; text-align: right; }
-
-    .content { min-width: 0; }
-    .prompt { display: block; font-size: 1.22rem; font-weight: 550; word-break: break-word; }
-    .answer {
-      display: block;
-      margin-top: 5px;
-      font-size: 1rem;
-      color: var(--accent);
-      word-break: break-word;
-      display: none;
-    }
-    .card.revealed .answer { display: block; }
-
-    .chev { color: var(--muted); font-size: 1.35rem; line-height: 1; transition: transform .18s ease; }
-    .card.revealed .chev { transform: rotate(90deg); }
-
-    .pager { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 18px 0 4px; }
-    .pager button {
-      border: 1px solid var(--line); background: var(--card); color: var(--fg);
-      font: inherit; font-size: .95rem; padding: 11px 20px; border-radius: 12px; cursor: pointer;
-    }
-    .pager button:disabled { opacity: .4; }
-    .page-info { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; min-width: 62px; text-align: center; }
-
-    .empty { color: var(--muted); text-align: center; padding: 40px 0; }
-
+    .word-button:active { transform: scale(.994); }
+    .word-card.is-open .word-button { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+    .number { color: var(--muted); font: 600 .76rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; font-variant-numeric: tabular-nums; }
+    .word-copy { min-width: 0; }
+    .prompt { display: block; font-size: 1.12rem; line-height: 1.38; font-weight: 640; overflow-wrap: anywhere; }
+    .answer { display: none; margin-top: 5px; color: var(--accent); font-size: .96rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .word-card.is-open .answer { display: block; }
+    .toggle-mark { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); background: var(--surface-2); font-size: 1rem; line-height: 1; transition: transform .18s ease; }
+    .word-card.is-open .toggle-mark { transform: rotate(45deg); color: var(--accent); }
+    .status { padding: 38px 12px; text-align: center; color: var(--muted); }
+    .pager { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 18px 0 22px; }
+    .pager button { min-height: 46px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 620; cursor: pointer; }
+    .pager button:last-child { justify-self: end; }
+    .pager button:disabled { opacity: .42; cursor: not-allowed; }
+    .page-indicator { color: var(--muted); font-size: .82rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .actionbar {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      z-index: 30;
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-      background: var(--bg);
-      border-top: 1px solid var(--line);
+      position: fixed; inset: auto 0 0; z-index: 20; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: color-mix(in srgb, var(--page) 93%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(14px);
     }
-    .actionbar button {
-      display: block; width: 100%; max-width: 680px; margin: 0 auto;
-      border: 0; border-radius: 14px; padding: 14px; font: inherit; font-size: 1rem; font-weight: 600;
-      background: var(--accent); color: #fff; cursor: pointer;
+    .action-inner { width: min(100%, 720px); margin-inline: auto; }
+    .reveal-all { width: 100%; min-height: 52px; border: 0; border-radius: 15px; color: var(--accent-ink); background: var(--accent); font-weight: 700; cursor: pointer; transition: opacity .15s ease, transform .15s ease; }
+    .reveal-all:active { transform: scale(.99); }
+    @media (min-width: 560px) {
+      .shell, .top-inner { width: min(100% - 48px, 720px); }
+      .heading { min-height: 72px; }
+      .controls { grid-template-columns: 1fr auto 120px; align-items: end; }
+      .control-row { display: contents; }
+      .control-row .select-wrap { grid-column: 3; }
+      .control-row .segmented { grid-column: 2; grid-row: 1; }
+      .controls > .select-wrap { grid-column: 1; }
+      .word-list { gap: 10px; }
+      .word-button { min-height: 82px; padding: 15px 18px; grid-template-columns: 42px minmax(0, 1fr) 28px; }
+      .prompt { font-size: 1.2rem; }
     }
-    .actionbar button.off { background: var(--accent-soft); color: var(--accent); }
-
-    @media (max-width: 400px) {
-      .prompt { font-size: 1.12rem; }
-      .card { padding: 14px; gap: 10px; grid-template-columns: 28px 1fr auto; }
-    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
   </style>
 </head>
-
 <body>
-  <header>
-    <div class="head-inner">
-      <h1>英语默写练习</h1>
-      <span class="count" id="count"></span>
+  <header class="topbar">
+    <div class="top-inner">
+      <div class="heading">
+        <h1><span class="eyebrow">ENGLISH · RECALL</span>词汇默写</h1>
+        <span class="count" id="count" aria-live="polite"></span>
+      </div>
+      <div class="controls" aria-label="练习设置">
+        <div class="select-wrap">
+          <label class="control-label" for="monthSelect">词表月份</label>
+          <select id="monthSelect"></select>
+        </div>
+        <div class="control-row">
+          <div class="segmented" id="direction" role="group" aria-label="默写方向">
+            <button type="button" data-dir="en" aria-pressed="true">英 → 中</button>
+            <button type="button" data-dir="zh" aria-pressed="false">中 → 英</button>
+          </div>
+          <div class="select-wrap">
+            <label class="control-label" for="pageSize">每页条数</label>
+            <select id="pageSize" aria-label="每页条数">
+              <option value="5">5 条</option><option value="10" selected>10 条</option><option value="20">20 条</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
-
-  <div class="wrap">
-    <div class="controls">
-      <div class="field">
-        <label for="monthSelect">月份</label>
-        <select id="monthSelect"></select>
-      </div>
-      <div class="seg" id="dir">
-        <button data-dir="en" class="on">英 → 中</button>
-        <button data-dir="zh">中 → 英</button>
-      </div>
-      <div class="field">
-        <label for="pageSize">每页</label>
-        <select id="pageSize">
-          <option value="5">5</option>
-          <option value="10" selected>10</option>
-          <option value="20">20</option>
-        </select>
-      </div>
-    </div>
-
-    <ol class="word-list" id="wordList"></ol>
-
-    <div class="pager">
-      <button id="prev">上一页</button>
-      <span class="page-info" id="pageInfo"></span>
-      <button id="next">下一页</button>
-    </div>
-  </div>
-
-  <div class="actionbar">
-    <button id="toggle" class="off">显示答案</button>
-  </div>
-
+  <main class="shell">
+    <div class="section-line"><h2 id="listTitle">本页词汇</h2><span class="hint">点按单词卡片查看答案</span></div>
+    <ol class="word-list" id="wordList" aria-labelledby="listTitle"></ol>
+    <nav class="pager" aria-label="词表分页">
+      <button type="button" id="prev">上一页</button>
+      <span class="page-indicator" id="pageInfo" aria-live="polite"></span>
+      <button type="button" id="next">下一页</button>
+    </nav>
+  </main>
+  <div class="actionbar"><div class="action-inner"><button class="reveal-all" id="toggle" type="button" aria-pressed="false">显示本页全部答案</button></div></div>
   <script>
-    const MONTHS = ["2025-08", "2025-09", "2026-10"];
-    const $ = s => document.querySelector(s);
+    (() => {
+      'use strict';
+      const MONTHS = ['2025-08', '2025-09', '2026-10'];
+      const $ = (selector) => document.querySelector(selector);
+      const list = $('#wordList');
+      const count = $('#count');
+      const monthSelect = $('#monthSelect');
+      const pageSize = $('#pageSize');
+      const pageInfo = $('#pageInfo');
+      const toggleButton = $('#toggle');
+      let words = [];
+      let page = 0;
+      let size = 10;
+      let direction = 'en';
+      let allRevealed = false;
+      let requestId = 0;
 
-    let words = [];
-    let page = 0;
-    let size = 10;
-    let dir = "en";
-    let allRevealed = false;
-
-    const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
-    function initMonths() {
-      const sel = $("#monthSelect");
-      MONTHS.forEach(m => {
-        const o = document.createElement("option");
-        o.value = m;
-        o.textContent = m;
-        sel.appendChild(o);
-      });
-      sel.value = MONTHS[MONTHS.length - 1];
-      sel.addEventListener("change", () => load(sel.value));
-    }
-
-    async function load(month) {
-      const list = $("#wordList");
-      try {
-        const res = await fetch("words/" + month + ".yaml", { cache: "no-cache" });
-        if (!res.ok) throw new Error(res.status);
-        words = (jsyaml.load(await res.text()) || []).filter(w => w && w.en);
-        page = 0;
-        allRevealed = false;
-        $("#toggle").textContent = "显示答案";
-        $("#toggle").classList.add("off");
-        $("#count").textContent = words.length ? words.length + " 词" : "";
-        render();
-      } catch (e) {
-        words = [];
-        $("#count").textContent = "";
-        list.innerHTML = '<li class="empty">加载失败：' + esc(month) + '.yaml 不存在或格式有误</li>';
+      function escapeHTML(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
       }
-    }
-
-    function render() {
-      const list = $("#wordList");
-      list.innerHTML = "";
-      const start = page * size;
-      words.slice(start, start + size).forEach((w, i) => {
-        const li = document.createElement("li");
-        li.className = "card";
-        const prompt = dir === "en" ? w.en : w.zh;
-        const answer = dir === "en" ? w.zh : w.en;
-        li.innerHTML =
-          '<span class="idx">' + (start + i + 1) + "</span>" +
-          '<span class="content"><span class="prompt">' + esc(prompt) + "</span>" +
-          '<span class="answer">' + esc(answer) + "</span></span>" +
-          '<span class="chev">›</span>';
-        li.addEventListener("click", () => li.classList.toggle("revealed"));
-        if (allRevealed) li.classList.add("revealed");
-        list.appendChild(li);
+      function setAllRevealed(value) {
+        allRevealed = value;
+        list.querySelectorAll('.word-card').forEach((card) => {
+          card.classList.toggle('is-open', value);
+          card.querySelector('.word-button').setAttribute('aria-expanded', String(value));
+        });
+        toggleButton.textContent = value ? '隐藏本页全部答案' : '显示本页全部答案';
+        toggleButton.setAttribute('aria-pressed', String(value));
+      }
+      function render() {
+        const pages = Math.max(1, Math.ceil(words.length / size));
+        page = Math.min(page, pages - 1);
+        const offset = page * size;
+        list.innerHTML = '';
+        words.slice(offset, offset + size).forEach((word, index) => {
+          const prompt = direction === 'en' ? word.en : word.zh;
+          const answer = direction === 'en' ? word.zh : word.en;
+          const number = offset + index + 1;
+          const item = document.createElement('li');
+          item.className = 'word-card' + (allRevealed ? ' is-open' : '');
+          item.innerHTML = '<button class="word-button" type="button" aria-expanded="' + allRevealed + '" aria-label="第' + number + '词，' + escapeHTML(prompt) + '，点击切换答案">' +
+            '<span class="number">' + String(number).padStart(3, '0') + '</span><span class="word-copy"><span class="prompt">' + escapeHTML(prompt) + '</span><span class="answer">' + escapeHTML(answer) + '</span></span><span class="toggle-mark" aria-hidden="true">＋</span></button>';
+          item.querySelector('.word-button').addEventListener('click', () => {
+            item.classList.toggle('is-open');
+            item.querySelector('.word-button').setAttribute('aria-expanded', String(item.classList.contains('is-open')));
+            allRevealed = [...list.querySelectorAll('.word-card')].every((card) => card.classList.contains('is-open'));
+            toggleButton.textContent = allRevealed ? '隐藏本页全部答案' : '显示本页全部答案';
+            toggleButton.setAttribute('aria-pressed', String(allRevealed));
+          });
+          list.appendChild(item);
+        });
+        pageInfo.textContent = '第 ' + (page + 1) + ' / ' + pages + ' 页';
+        $('#prev').disabled = page <= 0;
+        $('#next').disabled = page >= pages - 1;
+        toggleButton.disabled = words.length === 0;
+        count.textContent = words.length ? words.length + ' 词' : '';
+      }
+      async function load(month) {
+        const thisRequest = ++requestId;
+        list.innerHTML = '<li class="status">正在载入词表…</li>';
+        try {
+          const response = await fetch('words/' + encodeURIComponent(month) + '.yaml', { cache: 'no-cache' });
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          if (!window.jsyaml) throw new Error('YAML 解析器不可用');
+          const parsed = window.jsyaml.load(await response.text());
+          if (!Array.isArray(parsed)) throw new Error('词表格式无效');
+          if (thisRequest !== requestId) return;
+          words = parsed.filter((word) => word && typeof word.en === 'string' && typeof word.zh === 'string');
+          page = 0;
+          allRevealed = false;
+          render();
+        } catch (error) {
+          if (thisRequest !== requestId) return;
+          words = [];
+          allRevealed = false;
+          count.textContent = '';
+          pageInfo.textContent = '—';
+          list.innerHTML = '<li class="status">无法载入 ' + escapeHTML(month) + ' 词表，请检查网络后重试。</li>';
+          toggleButton.disabled = true;
+        }
+      }
+      MONTHS.forEach((month) => {
+        const option = document.createElement('option');
+        option.value = month;
+        option.textContent = month;
+        monthSelect.appendChild(option);
       });
-      const total = Math.max(1, Math.ceil(words.length / size));
-      $("#pageInfo").textContent = (page + 1) + " / " + total;
-      $("#prev").disabled = page <= 0;
-      $("#next").disabled = page >= total - 1;
-    }
-
-    function setReveal(v) {
-      allRevealed = v;
-      document.querySelectorAll(".card").forEach(c => c.classList.toggle("revealed", v));
-      const b = $("#toggle");
-      b.textContent = v ? "隐藏答案" : "显示答案";
-      b.classList.toggle("off", !v);
-    }
-
-    initMonths();
-    $("#pageSize").addEventListener("change", e => { size = +e.target.value; page = 0; render(); });
-    $("#prev").addEventListener("click", () => { if (page > 0) { page--; render(); } });
-    $("#next").addEventListener("click", () => {
-      const total = Math.max(1, Math.ceil(words.length / size));
-      if (page < total - 1) { page++; render(); }
-    });
-    $("#toggle").addEventListener("click", () => setReveal(!allRevealed));
-    $("#dir").addEventListener("click", e => {
-      const b = e.target.closest("button[data-dir]");
-      if (!b) return;
-      dir = b.dataset.dir;
-      document.querySelectorAll("#dir button").forEach(x => x.classList.toggle("on", x === b));
-      render();
-    });
-
-    load(MONTHS[MONTHS.length - 1]);
+      monthSelect.value = MONTHS[MONTHS.length - 1];
+      monthSelect.addEventListener('change', () => load(monthSelect.value));
+      pageSize.addEventListener('change', () => { size = Number(pageSize.value); page = 0; allRevealed = false; render(); });
+      $('#prev').addEventListener('click', () => { if (page > 0) { page--; allRevealed = false; render(); } });
+      $('#next').addEventListener('click', () => { if (page < Math.ceil(words.length / size) - 1) { page++; allRevealed = false; render(); } });
+      toggleButton.addEventListener('click', () => setAllRevealed(!allRevealed));
+      $('#direction').addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-dir]');
+        if (!button) return;
+        direction = button.dataset.dir;
+        $('#direction').querySelectorAll('button').forEach((candidate) => candidate.setAttribute('aria-pressed', String(candidate === button)));
+        allRevealed = false;
+        render();
+      });
+      load(monthSelect.value);
+    })();
   </script>
 </body>
-
 </html>
