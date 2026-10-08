@@ -153,7 +153,7 @@
           <div class="select-wrap">
             <label class="control-label" for="pageSize">每页条数</label>
             <select id="pageSize" aria-label="每页条数">
-              <option value="5">5 条</option><option value="10" selected>10 条</option><option value="20">20 条</option>
+              <option value="10" selected>10 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="40">40 条</option><option value="50">50 条</option><option value="100">100 条</option>
             </select>
           </div>
         </div>
@@ -187,6 +187,10 @@
       let direction = 'en';
       let allRevealed = false;
       let requestId = 0;
+      let pendingPage = 0;
+      const PREF_KEY = 'eng-words:prefs';
+      function readPrefs() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (error) { return {}; } }
+      function writePrefs(patch) { try { localStorage.setItem(PREF_KEY, JSON.stringify(Object.assign(readPrefs(), patch))); } catch (error) { /* storage unavailable */ } }
       let usVoice = null;
 
       function pickVoice() {
@@ -277,9 +281,11 @@
           if (!Array.isArray(parsed)) throw new Error('词表格式无效');
           if (thisRequest !== requestId) return;
           words = parsed.filter((word) => word && typeof word.en === 'string' && typeof word.zh === 'string');
-          page = 0;
+          page = Math.min(pendingPage || 0, Math.max(1, Math.ceil(words.length / size)) - 1);
+          pendingPage = 0;
           allRevealed = false;
           render();
+          writePrefs({ month, page });
         } catch (error) {
           if (thisRequest !== requestId) return;
           words = [];
@@ -296,11 +302,19 @@
         option.textContent = month;
         monthSelect.appendChild(option);
       });
-      monthSelect.value = MONTHS[MONTHS.length - 1];
-      monthSelect.addEventListener('change', () => load(monthSelect.value));
-      pageSize.addEventListener('change', () => { size = Number(pageSize.value); page = 0; allRevealed = false; render(); });
-      $('#prev').addEventListener('click', () => { if (page > 0) { page--; allRevealed = false; render(); } });
-      $('#next').addEventListener('click', () => { if (page < Math.ceil(words.length / size) - 1) { page++; allRevealed = false; render(); } });
+      const PAGE_SIZES = [10, 20, 30, 40, 50, 100];
+      const saved = readPrefs();
+      if (PAGE_SIZES.includes(Number(saved.size))) size = Number(saved.size);
+      pageSize.value = String(size);
+      if (saved.dir === 'zh') direction = 'zh';
+      $('#direction').querySelectorAll('button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.dir === direction)));
+      pendingPage = Number.isInteger(saved.page) && saved.page > 0 ? saved.page : 0;
+      const startMonth = MONTHS.includes(saved.month) ? saved.month : MONTHS[MONTHS.length - 1];
+      monthSelect.value = startMonth;
+      monthSelect.addEventListener('change', () => { pendingPage = 0; writePrefs({ month: monthSelect.value }); load(monthSelect.value); });
+      pageSize.addEventListener('change', () => { size = Number(pageSize.value); page = 0; allRevealed = false; writePrefs({ size: pageSize.value }); render(); });
+      $('#prev').addEventListener('click', () => { if (page > 0) { page--; allRevealed = false; render(); writePrefs({ page }); } });
+      $('#next').addEventListener('click', () => { if (page < Math.ceil(words.length / size) - 1) { page++; allRevealed = false; render(); writePrefs({ page }); } });
       toggleButton.addEventListener('click', () => setAllRevealed(!allRevealed));
       $('#direction').addEventListener('click', (event) => {
         const button = event.target.closest('button[data-dir]');
@@ -308,9 +322,10 @@
         direction = button.dataset.dir;
         $('#direction').querySelectorAll('button').forEach((candidate) => candidate.setAttribute('aria-pressed', String(candidate === button)));
         allRevealed = false;
+        writePrefs({ dir: direction });
         render();
       });
-      load(monthSelect.value);
+      load(startMonth);
     })();
   </script>
 </body>
