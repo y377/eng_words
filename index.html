@@ -4,176 +4,203 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f4f5f1">
+  <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161c19" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23285e48'/%3E%3Cpath d='M12 16c8-2 15-1 20 4 5-5 12-6 20-4v32c-8-2-15-1-20 4-5-5-12-6-20-4zM32 20v32' fill='none' stroke='%23fffefa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <meta name="description" content="按月整理的英语词汇默写练习，支持英中互测与答案显隐。">
   <title>词汇默写 · 英语练习</title>
-  <script src="https://cdn.bootcdn.net/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <script src="js-yaml.min.js"></script>
   <style>
     :root {
       color-scheme: light dark;
-      --page: #f2f4f1;
-      --surface: #fff;
-      --surface-2: #eef2ee;
-      --ink: #202923;
-      --muted: #68746d;
-      --line: #dce4dd;
-      --accent: #376c50;
-      --accent-ink: #fff;
-      --accent-wash: #e8f0ea;
-      --focus: #b85d32;
-      --shadow: 0 2px 10px rgba(34, 54, 41, .045), 0 1px 2px rgba(34, 54, 41, .035);
-      --radius: 16px;
-      --control-radius: 11px;
+      --page: #f6f5f1; --paper: #fffefa; --paper-raised: #ffffff; --well: #eeeee8;
+      --ink: #202a25; --muted: #717d75; --faint: #98a29a; --line: #e0e5dd;
+      --accent: #285e48; --accent-ink: #fffefa; --wash: #e8f0e9;
+      --edge: rgba(36, 67, 48, .095);
+      --shadow: 0 1px 2px rgba(34, 56, 42, .025), 0 8px 28px rgba(34, 56, 42, .035), 0 30px 62px rgba(34, 56, 42, .018);
+      --ease: cubic-bezier(.22, .68, 0, 1); --ring: #699b7b;
+      font-synthesis: none;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --page: #171d19; --surface: #202923; --surface-2: #2b352e;
-        --ink: #eef3ee; --muted: #a4b0a7; --line: #36443a;
-        --accent: #a8d0b3; --accent-ink: #17231b; --accent-wash: #293b30;
-        --focus: #e8a479; --shadow: 0 2px 12px rgba(0, 0, 0, .16);
+        --page: #161c19; --paper: #202923; --paper-raised: #263129; --well: #1b241f;
+        --ink: #eef2e9; --muted: #abb8ac; --faint: #89988c; --line: #39483d;
+        --accent: #afdab7; --accent-ink: #15241a; --wash: #2b4032;
+        --edge: rgba(196, 226, 199, .11);
+        --shadow: 0 1px 2px rgba(0,0,0,.10), 0 9px 30px rgba(0,0,0,.12), 0 30px 60px rgba(0,0,0,.06);
+        --ring: #b6e4b9;
       }
     }
     * { box-sizing: border-box; }
-    html { min-width: 320px; -webkit-text-size-adjust: 100%; scroll-padding-top: 180px; }
+    html { min-width: 320px; -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
     body {
-      min-width: 320px; margin: 0; color: var(--ink); background: var(--page);
-      font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      padding-bottom: calc(94px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent;
+      min-width: 320px; min-height: 100dvh; margin: 0; overflow-x: clip;
+      color: var(--ink); background: var(--page);
+      font: 400 16px/1.55 "Avenir Next", "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+      padding-bottom: calc(112px + env(safe-area-inset-bottom));
+      -webkit-tap-highlight-color: transparent;
     }
+    body::before { content: ""; pointer-events: none; position: fixed; inset: 0; z-index: 30; opacity: .16; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.075'/%3E%3C/svg%3E"); }
     button, select { font: inherit; color: inherit; }
     button { touch-action: manipulation; }
-    button:focus-visible, select:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-    .shell, .top-inner { width: min(100% - 32px, 680px); margin-inline: auto; }
-    .topbar {
-      position: sticky; inset-block-start: 0; z-index: 10; padding-top: env(safe-area-inset-top);
-      background: color-mix(in srgb, var(--page) 94%, transparent); border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    }
-    .heading { min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    h1 { margin: 0; font-size: 1.12rem; line-height: 1.25; font-weight: 730; letter-spacing: .01em; }
-    .eyebrow { display: block; margin-bottom: 3px; color: var(--muted); font-size: .64rem; letter-spacing: .15em; text-transform: uppercase; font-weight: 680; }
-    .count { flex: none; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .76rem; font-weight: 620; font-variant-numeric: tabular-nums; background: var(--surface); }
-    .controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; padding: 0 0 13px; }
-    .control-label { display: block; margin: 0 0 5px 2px; color: var(--muted); font-size: .7rem; font-weight: 650; }
-    .select-wrap { min-width: 0; }
-    select {
-      width: 100%; min-height: 46px; padding: 0 36px 0 12px; border: 1px solid var(--line); border-radius: var(--control-radius);
-      background: var(--surface); appearance: none; font-size: .88rem; font-weight: 570; cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%2368746d' stroke-width='1.6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 13px center;
-    }
-    .control-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; grid-column: 1 / -1; }
-    .segmented { min-height: 46px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: var(--control-radius); background: var(--surface); }
-    .segmented button { min-width: 0; padding: 0 6px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: .82rem; font-weight: 620; cursor: pointer; transition: color .16s ease, background .16s ease, transform .16s ease; }
-    .segmented button[aria-pressed="true"] { color: var(--accent); background: var(--accent-wash); }
-    .segmented button:active, .pager button:active { transform: scale(.98); }
-    main { padding-top: 20px; }
-    .section-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
-    .section-line h2 { margin: 0; font-size: .84rem; color: var(--ink); font-weight: 690; }
-    .hint { color: var(--muted); font-size: .7rem; text-align: right; }
-    .progress-row { display: flex; align-items: center; gap: 10px; margin: -2px 0 14px; }
+    button:focus-visible, select:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+    .skip-link { position: absolute; left: 16px; top: -60px; z-index: 40; padding: 10px 16px; background: var(--paper); color: var(--ink); border-radius: 8px; }
+    .skip-link:focus { top: 16px; }
+    .shell { width: min(100% - 32px, 760px); margin-inline: auto; }
+    .masthead { padding: calc(40px + env(safe-area-inset-top)) 0 24px; }
+    .brandline { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark { flex: none; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--edge); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); color: var(--accent); }
+    .brand-mark svg { width: 22px; height: 22px; }
+    .brand-name { color: var(--ink); font-size: .85rem; line-height: 1.25; font-weight: 750; letter-spacing: .05em; }
+    .brand-sub { display: block; margin-top: 1px; color: var(--muted); font-size: .65rem; font-weight: 650; letter-spacing: .17em; text-transform: uppercase; }
+    .edition { color: var(--muted); font-size: .67rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+    .hero { padding: 56px 0 36px; }
+    .hero-kicker { margin: 0 0 12px; color: var(--accent); font-size: .7rem; font-weight: 750; letter-spacing: .2em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(2.9rem, 10vw, 5.7rem); line-height: 1.12; font-weight: 760; letter-spacing: -.065em; text-wrap: balance; }
+    h1 em { margin-left: .08em; color: var(--accent); font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.08em; }
+    .hero-note { max-width: 32em; margin: 20px 0 0; color: var(--muted); font-size: .94rem; line-height: 1.7; text-wrap: pretty; }
+    .workbench { padding: 3px; border: 1px solid var(--edge); border-radius: 26px; background: var(--well); box-shadow: var(--shadow); }
+    .workbench-inner { padding: 20px; border-radius: 22px; background: var(--paper); box-shadow: inset 0 1px rgba(255,255,255,.25); }
+    .workbench-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+    .overline { display: block; color: var(--muted); font-size: .67rem; font-weight: 750; letter-spacing: .17em; text-transform: uppercase; }
+    .workbench-head strong { display: block; margin-top: 3px; font-size: 1.08rem; font-weight: 730; letter-spacing: -.025em; }
+    .count { color: var(--accent); font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .controls { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,.72fr); align-items: end; gap: 12px; padding-top: 20px; }
+    .select-wrap { position: relative; min-width: 0; }
+    .control-label { display: block; margin-bottom: 7px; color: var(--muted); font-size: .72rem; font-weight: 680; }
+    select { width: 100%; min-height: 48px; padding: 0 36px 0 14px; appearance: none; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-raised); font-size: .86rem; font-weight: 650; font-variant-numeric: tabular-nums; cursor: pointer; transition: border-color .18s var(--ease), background .18s var(--ease), transform .18s var(--ease); }
+    .select-wrap::after { content: ""; pointer-events: none; position: absolute; right: 16px; bottom: 20px; width: 8px; height: 8px; border-right: 1.6px solid var(--muted); border-bottom: 1.6px solid var(--muted); transform: rotate(45deg); }
+    select:hover { border-color: var(--faint); background: var(--wash); }
+    select:active { transform: scale(.985); }
+    .segmented { min-height: 48px; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--well); }
+    .segmented button { min-height: 44px; min-width: 0; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: .81rem; font-weight: 660; cursor: pointer; transition: color .18s var(--ease), background .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease); }
+    .segmented button:hover:not([aria-pressed="true"]) { color: var(--ink); background: var(--paper); }
+    .segmented button[aria-pressed="true"] { background: var(--paper-raised); color: var(--accent); box-shadow: 0 1px 4px rgba(22,52,34,.09); }
+    .segmented button:active { transform: scale(.965); }
+    main { padding-top: 56px; }
+    .list-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .list-head h2 { margin: 5px 0 0; font-size: 1.36rem; line-height: 1.25; font-weight: 740; letter-spacing: -.035em; }
+    .hint { max-width: 20em; margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.5; text-align: right; }
+    .progress-row { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
     .progress-track { height: 3px; flex: 1; overflow: hidden; border-radius: 99px; background: var(--line); }
-    .progress-fill { height: 100%; width: 0; border-radius: inherit; background: var(--accent); transition: width .18s ease; }
-    .range { color: var(--muted); font-size: .7rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .word-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
-    .word-card { position: relative; min-width: 0; }
-    .word-button {
-      width: 100%; min-height: 78px; display: grid; grid-template-columns: 34px minmax(0, 1fr) 24px; align-items: center; gap: 11px;
-      padding: 13px 82px 13px 13px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
-      text-align: left; cursor: pointer; box-shadow: var(--shadow); transition: border-color .17s ease, background .17s ease, transform .17s ease, box-shadow .17s ease;
-    }
-    .word-button:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
-    .word-button:active { transform: scale(.994); }
-    .word-card.is-open .word-button { border-color: color-mix(in srgb, var(--accent) 56%, var(--line)); background: color-mix(in srgb, var(--accent-wash) 36%, var(--surface)); }
-    .number { color: var(--muted); font: 600 .72rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; font-variant-numeric: tabular-nums; }
-    .word-copy { min-width: 0; }
-    .prompt { display: block; font-size: 1.18rem; line-height: 1.35; font-weight: 660; letter-spacing: -.012em; overflow-wrap: anywhere; }
-    .prompt.is-zh { font-size: 1rem; line-height: 1.5; font-weight: 590; letter-spacing: 0; }
-    .phon { display: block; margin-top: 3px; color: var(--muted); font: 500 .78rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
-    .answer { display: none; margin-top: 6px; color: var(--accent); font-size: .94rem; line-height: 1.5; font-weight: 580; overflow-wrap: anywhere; }
-    .answer.is-zh { font-size: .88rem; line-height: 1.55; }
-    .word-card.is-open .answer { display: block; }
-    .toggle-mark { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); background: var(--surface-2); font-size: 1rem; line-height: 1; transition: transform .17s ease, color .17s ease, background .17s ease; }
-    .word-card.is-open .toggle-mark { transform: rotate(45deg); color: var(--accent); background: var(--accent-wash); }
-    .speak-button {
-      position: absolute; inset-block-start: 50%; inset-inline-end: 11px; transform: translateY(-50%);
-      width: 58px; height: 46px; display: grid; place-items: center;
-      border: 1px solid color-mix(in srgb, var(--accent) 27%, var(--line)); border-radius: 12px; background: var(--accent-wash); color: var(--accent); cursor: pointer;
-      transition: color .16s ease, border-color .16s ease, background .16s ease, transform .16s ease;
-    }
-    .speak-button:hover { border-color: color-mix(in srgb, var(--accent) 52%, var(--line)); }
-    .speak-button:active { transform: translateY(-50%) scale(.96); }
-    .status { padding: 42px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); text-align: center; color: var(--muted); }
-    .status strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: .96rem; }
-    .retry { min-height: 44px; margin-top: 12px; padding: 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--accent); font-weight: 650; cursor: pointer; }
-    .pager { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 17px 0 22px; }
-    .pager button { min-height: 46px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--control-radius); background: var(--surface); font-size: .85rem; font-weight: 620; cursor: pointer; transition: transform .16s ease, opacity .16s ease, border-color .16s ease; }
+    .progress-fill { height: 100%; width: 0; border-radius: inherit; background: var(--accent); transition: width .2s var(--ease); }
+    .range { color: var(--muted); font-size: .71rem; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .word-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .word-card { position: relative; min-width: 0; padding: 2px; border: 1px solid var(--edge); border-radius: 20px; background: var(--well); box-shadow: var(--shadow); transition: background .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease); }
+    .word-card:nth-child(-n+10) { animation: card-enter .2s var(--ease) both; }
+    @keyframes card-enter { from { opacity: .35; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .word-card:hover { transform: translateY(-1px); box-shadow: 0 1px 2px rgba(34,56,42,.03), 0 14px 32px rgba(34,56,42,.06); }
+    .word-card.is-open { background: var(--accent); box-shadow: 0 2px 4px rgba(34,56,42,.035), 0 16px 38px rgba(34,56,42,.075); }
+    .word-button { width: 100%; min-height: 84px; display: grid; grid-template-columns: 42px minmax(0,1fr) 20px; align-items: start; gap: 16px; padding: 20px 76px 20px 20px; border: 0; border-radius: 17px; background: var(--paper); text-align: left; cursor: pointer; transition: background .18s var(--ease), transform .18s var(--ease); }
+    .word-button:hover { background: var(--paper-raised); }
+    .word-button:active { transform: scale(.995); }
+    .word-card.is-open .word-button { background: var(--paper-raised); }
+    .number { padding-top: 7px; color: var(--faint); font-size: .68rem; line-height: 1.2; font-weight: 750; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+    .word-copy { min-width: 0; display: block; }
+    .prompt { display: block; color: var(--ink); font-size: 1.25rem; line-height: 1.32; font-weight: 750; letter-spacing: -.035em; overflow-wrap: anywhere; }
+    .prompt.is-zh { font-size: 1.02rem; line-height: 1.5; font-weight: 630; letter-spacing: -.005em; }
+    .phon { display: block; margin-top: 5px; color: var(--muted); font-size: .77rem; line-height: 1.45; font-weight: 520; letter-spacing: .015em; overflow-wrap: anywhere; }
+    .answer-wrap { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .2s var(--ease), opacity .18s var(--ease); }
+    .answer-inner { min-height: 0; overflow: hidden; }
+    .answer { display: block; margin-top: 0; color: var(--accent); font-size: 1.02rem; line-height: 1.55; font-weight: 670; overflow-wrap: anywhere; }
+    .answer.is-zh { font-size: .91rem; font-weight: 560; line-height: 1.65; }
+    .word-card.is-open .answer-wrap { grid-template-rows: 1fr; opacity: 1; }
+    .word-card.is-open .answer { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line); }
+    .toggle-mark { width: 20px; height: 20px; margin-top: 4px; display: grid; place-items: center; color: var(--muted); transition: color .18s var(--ease), transform .18s var(--ease); }
+    .toggle-mark svg { width: 17px; height: 17px; }
+    .word-card.is-open .toggle-mark { color: var(--accent); transform: rotate(45deg); }
+    .speak-button { position: absolute; top: 19px; right: 18px; width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-raised); color: var(--accent); cursor: pointer; transition: background .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease); }
+    .speak-button svg { width: 21px; height: 21px; }
+    .speak-button:hover { background: var(--wash); border-color: var(--faint); }
+    .speak-button:active { transform: scale(.94); }
+    .status { padding: 40px 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); color: var(--muted); text-align: center; }
+    .status strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 1rem; font-weight: 720; }
+    .status-icon { display: grid; place-items: center; width: 44px; height: 44px; margin: 0 auto 16px; border-radius: 14px; background: var(--wash); color: var(--accent); }
+    .status-icon svg { width: 22px; height: 22px; }
+    .skeleton { height: 92px; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); padding: 28px 24px; }
+    .skeleton::before, .skeleton::after { content: ""; display: block; height: 10px; border-radius: 99px; background: var(--well); animation: pulse 1.2s var(--ease) infinite alternate; }
+    .skeleton::before { width: 37%; } .skeleton::after { width: 22%; margin-top: 10px; }
+    @keyframes pulse { to { opacity: .4; } }
+    .retry { min-height: 44px; margin-top: 20px; padding: 0 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-raised); color: var(--accent); font-weight: 700; cursor: pointer; transition: background .18s var(--ease), transform .18s var(--ease); }
+    .retry:hover { background: var(--wash); } .retry:active { transform: scale(.97); }
+    .pager { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 24px; padding-bottom: 40px; }
+    .pager button { min-height: 48px; width: max-content; max-width: 100%; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); font-size: .82rem; font-weight: 700; cursor: pointer; transition: background .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease); }
     .pager button:last-child { justify-self: end; }
-    .pager button:disabled { opacity: .42; cursor: not-allowed; }
-    .page-indicator { color: var(--muted); font-size: .78rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    .actionbar {
-      position: fixed; inset: auto 0 0; z-index: 20; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-      background: color-mix(in srgb, var(--page) 93%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    .pager button svg { width: 16px; height: 16px; }
+    .pager button:hover:not(:disabled) { background: var(--wash); border-color: var(--faint); }
+    .pager button:active:not(:disabled) { transform: scale(.96); }
+    .pager button:disabled { opacity: .38; cursor: not-allowed; }
+    .page-indicator { color: var(--muted); font-size: .76rem; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .actionbar { position: fixed; inset: auto 0 0; z-index: 20; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--edge); background: color-mix(in srgb, var(--page) 93%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    .action-inner { width: min(100%, 760px); margin-inline: auto; }
+    .reveal-all { width: 100%; min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 5px 6px 5px 20px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-ink); font-size: .93rem; font-weight: 720; cursor: pointer; box-shadow: 0 8px 22px rgba(28, 76, 49, .13); transition: opacity .18s var(--ease), transform .18s var(--ease), box-shadow .18s var(--ease); }
+    .reveal-all:hover { box-shadow: 0 10px 26px rgba(28, 76, 49, .19); }
+    .reveal-all:active { transform: scale(.985); }
+    .reveal-all:disabled { opacity: .4; cursor: not-allowed; }
+    .cta-icon { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 12px; background: rgba(255,255,255,.15); transition: transform .18s var(--ease); }
+    .cta-icon svg { width: 20px; height: 20px; } .reveal-all:hover .cta-icon { transform: translateX(2px); }
+    @media (min-width: 900px) {
+      .masthead { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); column-gap: 48px; align-items: center; }
+      .brandline { grid-column: 1 / -1; }
+      .hero { padding: 56px 0 24px; }
+      .hero h1 { font-size: clamp(3.7rem, 5vw, 4.6rem); }
+      .workbench { margin-top: 30px; }
+      .controls { grid-template-columns: minmax(0, 1fr) 112px; }
+      .controls > .select-wrap:first-child { grid-column: 1 / -1; }
+      main { padding-top: 32px; }
     }
-    .action-inner { width: min(100%, 680px); margin-inline: auto; }
-    .reveal-all { width: 100%; min-height: 52px; border: 0; border-radius: 13px; color: var(--accent-ink); background: var(--accent); font-size: .94rem; font-weight: 700; cursor: pointer; transition: opacity .16s ease, transform .16s ease; }
-    .reveal-all:hover { opacity: .92; }
-    .reveal-all:active { transform: scale(.99); }
-    .reveal-all:disabled { opacity: .45; cursor: not-allowed; }
-    @media (min-width: 560px) {
-      .shell, .top-inner { width: min(100% - 48px, 680px); }
-      .heading { min-height: 74px; }
-      .controls { grid-template-columns: minmax(140px, 1fr) auto 120px; align-items: end; }
-      .control-row { display: contents; }
-      .control-row .select-wrap { grid-column: 3; }
-      .control-row .segmented { grid-column: 2; grid-row: 1; }
-      .controls > .select-wrap { grid-column: 1; }
-      .word-list { gap: 10px; }
-      .word-button { min-height: 84px; padding: 15px 92px 15px 16px; grid-template-columns: 40px minmax(0, 1fr) 28px; }
-      .speak-button { width: 64px; height: 50px; inset-inline-end: 14px; }
-      .prompt { font-size: 1.22rem; }
+    @media (max-width: 620px) {
+      .masthead { padding-top: calc(20px + env(safe-area-inset-top)); }
+      .edition { display: none; }
+      .hero { padding: 30px 0 20px; }
+      .hero-note { display: none; }
+      .workbench-head { padding-bottom: 12px; }
+      .controls { grid-template-columns: minmax(0, 1fr) 112px; gap: 12px; }
+      .controls > .select-wrap:first-child { grid-column: 1 / -1; }
+      .workbench-inner { padding: 16px; }
+      .controls { padding-top: 12px; }
+      main { padding-top: 24px; }
+    }
+    @media (max-width: 400px) {
+      .shell { width: min(100% - 24px, 760px); }
+      .hero { padding-top: 24px; }
+      .hero-note { font-size: .86rem; }
+      .workbench { border-radius: 22px; } .workbench-inner { border-radius: 18px; }
+      .word-button { grid-template-columns: 31px minmax(0,1fr) 16px; gap: 10px; padding: 17px 66px 17px 14px; }
+      .prompt { font-size: 1.14rem; } .prompt.is-zh { font-size: .96rem; }
+      .speak-button { right: 12px; top: 16px; width: 44px; height: 44px; }
+      .hint { max-width: 11em; }
+      .pager button { padding: 0 11px; gap: 4px; font-size: .75rem; }
+      .page-indicator { font-size: .69rem; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="top-inner">
-      <div class="heading">
-        <h1><span class="eyebrow">ENGLISH · RECALL</span>词汇默写</h1>
-        <span class="count" id="count" aria-live="polite"></span>
-      </div>
-      <div class="controls" aria-label="练习设置">
-        <div class="select-wrap">
-          <label class="control-label" for="monthSelect">词表月份</label>
-          <select id="monthSelect"></select>
-        </div>
-        <div class="control-row">
-          <div class="segmented" id="direction" role="group" aria-label="默写方向">
-            <button type="button" data-dir="en" aria-pressed="true">英 → 中</button>
-            <button type="button" data-dir="zh" aria-pressed="false">中 → 英</button>
-          </div>
-          <div class="select-wrap">
-            <label class="control-label" for="pageSize">每页条数</label>
-            <select id="pageSize" aria-label="每页条数">
-              <option value="10" selected>10 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="40">40 条</option><option value="50">50 条</option><option value="100">100 条</option>
-            </select>
-          </div>
-        </div>
-      </div>
+  <a class="skip-link" href="#practice">跳到词汇列表</a>
+  <header class="shell masthead">
+    <div class="brandline">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5c3.5-1 6.3-.4 8.5 1.5 2.2-1.9 5-2.5 8.5-1.5v13c-3.5-1-6.3-.4-8.5 1.5-2.2-1.9-5-2.5-8.5-1.5z"/><path d="M12 7v13"/></svg></span><div class="brand-name">词汇默写<span class="brand-sub">English · Recall</span></div></div>
+      <span class="edition">A little practice, every day</span>
     </div>
+    <div class="hero"><p class="hero-kicker">Your daily word practice</p><h1>记住每个<br>新单词<em>.</em></h1><p class="hero-note">选好词表与练习方向，先想一想，再点开答案。属于你的词汇练习，随时继续。</p></div>
+    <section class="workbench" aria-labelledby="settingsTitle"><div class="workbench-inner">
+      <div class="workbench-head"><div><span class="overline">Practice setup</span><strong id="settingsTitle">今天练哪一组？</strong></div><span class="count" id="count" aria-live="polite"></span></div>
+      <div class="controls" aria-label="练习设置">
+        <div class="select-wrap"><label class="control-label" for="monthSelect">词表月份</label><select id="monthSelect"></select></div>
+        <div><span class="control-label" id="directionLabel">默写方向</span><div class="segmented" id="direction" role="group" aria-labelledby="directionLabel"><button type="button" data-dir="en" aria-pressed="true">英 → 中</button><button type="button" data-dir="zh" aria-pressed="false">中 → 英</button></div></div>
+        <div class="select-wrap"><label class="control-label" for="pageSize">每页条数</label><select id="pageSize"><option value="10" selected>10 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="40">40 条</option><option value="50">50 条</option><option value="100">100 条</option></select></div>
+      </div>
+    </div></section>
   </header>
-  <main class="shell">
-    <div class="section-line"><h2 id="listTitle">本页词汇</h2><span class="hint">点卡片看答案 · 喇叭听美音</span></div>
+  <main class="shell" id="practice">
+    <div class="list-head"><div><span class="overline">Vocabulary / Practice</span><h2 id="listTitle">本页词汇</h2></div><p class="hint">点词条看答案<br>点声音听美音</p></div>
     <div class="progress-row" aria-hidden="true"><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div><span class="range" id="rangeInfo"></span></div>
     <ol class="word-list" id="wordList" aria-labelledby="listTitle"></ol>
-    <nav class="pager" aria-label="词表分页">
-      <button type="button" id="prev">上一页</button>
-      <span class="page-indicator" id="pageInfo" aria-live="polite"></span>
-      <button type="button" id="next">下一页</button>
-    </nav>
+    <nav class="pager" aria-label="词表分页"><button type="button" id="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>上一页</button><span class="page-indicator" id="pageInfo" aria-live="polite"></span><button type="button" id="next">下一页<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></nav>
   </main>
-  <div class="actionbar"><div class="action-inner"><button class="reveal-all" id="toggle" type="button" aria-pressed="false">显示本页全部答案</button></div></div>
+  <div class="actionbar"><div class="action-inner"><button class="reveal-all" id="toggle" type="button" aria-pressed="false"><span id="toggleLabel">显示本页全部答案</span><span class="cta-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span></button></div></div>
   <script>
     (() => {
       'use strict';
@@ -222,8 +249,10 @@
           synth.speak(utterance);
         } catch (error) { /* speech unsupported */ }
       }
-      const SPEAKER_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a9 9 0 0 1 0 12"/></svg>';
+      const SPEAKER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a9 9 0 0 1 0 12"/></svg>';
 
+      const PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+      const STATUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 20.5 8v8L12 20.5 3.5 16V8z"/><path d="M8 12h8"/></svg>';
       function escapeHTML(value) {
         return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
       }
@@ -232,8 +261,9 @@
         list.querySelectorAll('.word-card').forEach((card) => {
           card.classList.toggle('is-open', value);
           card.querySelector('.word-button').setAttribute('aria-expanded', String(value));
+          card.querySelector('.answer-wrap').setAttribute('aria-hidden', String(!value));
         });
-        toggleButton.textContent = value ? '隐藏本页全部答案' : '显示本页全部答案';
+        $('#toggleLabel').textContent = value ? '隐藏本页全部答案' : '显示本页全部答案';
         toggleButton.setAttribute('aria-pressed', String(value));
       }
       function render() {
@@ -250,12 +280,12 @@
           const zhCls = (text) => (/[\u3400-\u9fff]/.test(text) ? ' is-zh' : '');
           const phon = word.ph ? '<span class="phon">' + escapeHTML(word.ph) + '</span>' : '';
           const copy = direction === 'en'
-            ? '<span class="prompt">' + escapeHTML(prompt) + '</span>' + phon + '<span class="answer' + zhCls(answer) + '">' + escapeHTML(answer) + '</span>'
-            : '<span class="prompt' + zhCls(prompt) + '">' + escapeHTML(prompt) + '</span><span class="answer">' + escapeHTML(answer) + phon + '</span>';
+            ? '<span class="prompt">' + escapeHTML(prompt) + '</span>' + phon + '<span class="answer-wrap" aria-hidden="' + !allRevealed + '"><span class="answer-inner"><span class="answer' + zhCls(answer) + '">' + escapeHTML(answer) + '</span></span></span>'
+            : '<span class="prompt' + zhCls(prompt) + '">' + escapeHTML(prompt) + '</span><span class="answer-wrap" aria-hidden="' + !allRevealed + '"><span class="answer-inner"><span class="answer">' + escapeHTML(answer) + phon + '</span></span></span>';
           item.innerHTML = '<button class="word-button" type="button" aria-expanded="' + allRevealed + '" aria-label="第' + number + '词，' + escapeHTML(prompt) + '，点击切换答案">' +
             '<span class="number">' + String(number).padStart(3, '0') + '</span>' +
             '<span class="word-copy">' + copy + '</span>' +
-            '<span class="toggle-mark" aria-hidden="true">＋</span></button>' +
+            '<span class="toggle-mark" aria-hidden="true">' + PLUS_ICON + '</span></button>' +
             '<button class="speak-button" type="button" aria-label="朗读 ' + escapeHTML(word.en) + '（美式读音）" title="美式读音">' + SPEAKER_ICON + '</button>';
           item.querySelector('.speak-button').addEventListener('click', (event) => {
             event.stopPropagation();
@@ -264,12 +294,14 @@
           item.querySelector('.word-button').addEventListener('click', () => {
             item.classList.toggle('is-open');
             item.querySelector('.word-button').setAttribute('aria-expanded', String(item.classList.contains('is-open')));
+            item.querySelector('.answer-wrap').setAttribute('aria-hidden', String(!item.classList.contains('is-open')));
             allRevealed = [...list.querySelectorAll('.word-card')].every((card) => card.classList.contains('is-open'));
-            toggleButton.textContent = allRevealed ? '隐藏本页全部答案' : '显示本页全部答案';
+            $('#toggleLabel').textContent = allRevealed ? '隐藏本页全部答案' : '显示本页全部答案';
             toggleButton.setAttribute('aria-pressed', String(allRevealed));
           });
           list.appendChild(item);
         });
+        if (!words.length) list.innerHTML = '<li class="status"><span class="status-icon">' + STATUS_ICON + '</span><strong>这个词表还是空的</strong>换一个月份，继续练习。</li>';
         pageInfo.textContent = '第 ' + (page + 1) + ' / ' + pages + ' 页';
         const shown = Math.min(offset + size, words.length);
         progressFill.style.width = words.length ? (shown / words.length * 100) + '%' : '0%';
@@ -281,7 +313,12 @@
       }
       async function load(month) {
         const thisRequest = ++requestId;
-        list.innerHTML = '<li class="status" role="status">正在载入词表…</li>';
+        list.innerHTML = '<li class="skeleton" role="status" aria-label="正在载入词表"></li><li class="skeleton" aria-hidden="true"></li><li class="skeleton" aria-hidden="true"></li>';
+        count.textContent = '载入中';
+        pageInfo.textContent = '载入中';
+        progressFill.style.width = '0%';
+        rangeInfo.textContent = '';
+        $('#prev').disabled = true; $('#next').disabled = true;
         toggleButton.disabled = true;
         try {
           const response = await fetch('words/' + encodeURIComponent(month) + '.yaml', { cache: 'no-cache' });
@@ -302,7 +339,7 @@
           allRevealed = false;
           count.textContent = '';
           pageInfo.textContent = '暂不可用';
-          list.innerHTML = '<li class="status"><strong>词表暂时无法载入</strong>请检查网络连接后重试。<br><button class="retry" type="button">重新载入</button></li>';
+          list.innerHTML = '<li class="status" role="alert"><span class="status-icon">' + STATUS_ICON + '</span><strong>词表暂时无法载入</strong>请检查网络连接，或换一个月份。<br><button class="retry" type="button">重新载入</button></li>';
           list.querySelector('.retry').addEventListener('click', () => load(monthSelect.value));
           progressFill.style.width = '0%';
           rangeInfo.textContent = '0 / 0';
