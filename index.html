@@ -99,6 +99,8 @@
     .word-copy { min-width: 0; }
     .prompt { display: block; font-size: 1.12rem; line-height: 1.38; font-weight: 640; overflow-wrap: anywhere; }
     .answer { display: none; margin-top: 5px; color: var(--accent); font-size: .96rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .prompt.is-zh { font-size: 1rem; line-height: 1.5; font-weight: 580; }
+    .answer.is-zh { font-size: .88rem; line-height: 1.55; }
     .word-card.is-open .answer { display: block; }
     .toggle-mark { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); background: var(--surface-2); font-size: 1rem; line-height: 1; transition: transform .18s ease; }
     .word-card.is-open .toggle-mark { transform: rotate(45deg); color: var(--accent); }
@@ -235,10 +237,11 @@
           const number = offset + index + 1;
           const item = document.createElement('li');
           item.className = 'word-card' + (allRevealed ? ' is-open' : '');
+          const zhCls = (text) => (/[\u3400-\u9fff]/.test(text) ? ' is-zh' : '');
           const phon = word.ph ? '<span class="phon">' + escapeHTML(word.ph) + '</span>' : '';
           const copy = direction === 'en'
-            ? '<span class="prompt">' + escapeHTML(prompt) + '</span>' + phon + '<span class="answer">' + escapeHTML(answer) + '</span>'
-            : '<span class="prompt">' + escapeHTML(prompt) + '</span><span class="answer">' + escapeHTML(answer) + phon + '</span>';
+            ? '<span class="prompt">' + escapeHTML(prompt) + '</span>' + phon + '<span class="answer' + zhCls(answer) + '">' + escapeHTML(answer) + '</span>'
+            : '<span class="prompt' + zhCls(prompt) + '">' + escapeHTML(prompt) + '</span><span class="answer">' + escapeHTML(answer) + phon + '</span>';
           item.innerHTML = '<button class="word-button" type="button" aria-expanded="' + allRevealed + '" aria-label="第' + number + '词，' + escapeHTML(prompt) + '，点击切换答案">' +
             '<span class="number">' + String(number).padStart(3, '0') + '</span>' +
             '<span class="word-copy">' + copy + '</span>' +
