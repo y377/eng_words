@@ -250,7 +250,16 @@
           speak(sample);
         });
       }
-      function speak(text) {
+      let wordAudio = null;
+      function slugify(text) {
+        return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      function audioUrlFor(text) {
+        const month = monthSelect.value;
+        const slug = slugify(text);
+        return month && slug ? 'words/audio/' + encodeURIComponent(month) + '/' + encodeURIComponent(slug) + '.mp3' : null;
+      }
+      function synthSpeak(text) {
         const synth = window.speechSynthesis;
         if (!synth || !text) return;
         try {
@@ -262,6 +271,19 @@
           if (voice) utterance.voice = voice;
           synth.speak(utterance);
         } catch (error) { /* speech unsupported */ }
+      }
+      function speak(text) {
+        if (!text) return;
+        const url = audioUrlFor(text);
+        if (!url) { synthSpeak(text); return; }
+        let audio = wordAudio;
+        if (!audio) { audio = new Audio(); wordAudio = audio; }
+        try {
+          audio.pause();
+          audio.src = url;
+          const attempt = audio.play();
+          if (attempt && typeof attempt.catch === 'function') attempt.catch(() => synthSpeak(text));
+        } catch (error) { synthSpeak(text); }
       }
       const SPEAKER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a9 9 0 0 1 0 12"/></svg>';
 
