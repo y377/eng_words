@@ -68,6 +68,7 @@
     select:hover { border-color: var(--faint); }
     #monthSelect { flex: 1.4; min-width: 92px; }
     #pageSize { flex: 1; min-width: 84px; }
+    #voiceSelect { flex: 1.5; min-width: 96px; }
     .segmented { flex: 1.7; min-width: 128px; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: 3px; padding: 3px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); }
     .segmented button { min-height: 36px; min-width: 0; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: .8rem; font-weight: 640; cursor: pointer; transition: color .16s var(--ease), background .16s var(--ease), box-shadow .16s var(--ease); }
     .segmented button:hover:not([aria-pressed="true"]) { color: var(--ink); }
@@ -162,6 +163,7 @@
       <select id="monthSelect" aria-label="词表月份"></select>
       <div class="segmented" id="direction" role="group" aria-label="默写方向"><button type="button" data-dir="en" aria-pressed="true">英 → 中</button><button type="button" data-dir="zh" aria-pressed="false">中 → 英</button></div>
       <select id="pageSize" aria-label="每页条数"><option value="10" selected>10 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="40">40 条</option><option value="50">50 条</option><option value="100">100 条</option></select>
+      <select id="voiceSelect" aria-label="发音声音"></select>
     </div>
     <div class="track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
   </div>
@@ -184,6 +186,7 @@
       const progressFill = $('#progressFill');
       const rangeInfo = $('#rangeInfo');
       const toggleButton = $('#toggle');
+      const voiceSelect = $('#voiceSelect');
       let words = [];
       let page = 0;
       let size = 10;
@@ -194,17 +197,58 @@
       const PREF_KEY = 'eng-words:prefs';
       function readPrefs() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (error) { return {}; } }
       function writePrefs(patch) { try { localStorage.setItem(PREF_KEY, JSON.stringify(Object.assign(readPrefs(), patch))); } catch (error) { /* storage unavailable */ } }
-      let usVoice = null;
-
-      function pickVoice() {
+      const US_NAME_HINT = /google (us english|美国英语)|samantha|zira|aria|jenny|allison|ava|joanna/i;
+      function scoreVoice(v) {
+        if (!/^en[-_]US/i.test(v.lang || '')) return 0;
+        let score = 100;
+        if (v.localService) score += 50;
+        if (US_NAME_HINT.test(v.name || '')) score += 30;
+        return score;
+      }
+      function bestUSVoice(voices) {
+        let best = null;
+        let bestScore = 0;
+        voices.forEach((v) => {
+          const score = scoreVoice(v);
+          if (score > bestScore) { bestScore = score; best = v; }
+        });
+        return best;
+      }
+      function activeVoice() {
         if (!window.speechSynthesis) return null;
         const voices = window.speechSynthesis.getVoices() || [];
-        return voices.find((v) => /^en[-_]US/i.test(v.lang)) || voices.find((v) => /^en/i.test(v.lang)) || null;
+        const chosen = voiceSelect ? voiceSelect.value : 'auto';
+        if (chosen && chosen !== 'auto') {
+          const hit = voices.find((v) => v.name + '|' + v.lang === chosen);
+          if (hit) return hit;
+        }
+        return bestUSVoice(voices);
       }
-      function refreshVoice() { usVoice = pickVoice(); }
+      function rebuildVoiceOptions() {
+        if (!voiceSelect) return;
+        const voices = window.speechSynthesis ? (window.speechSynthesis.getVoices() || []) : [];
+        const en = voices.filter((v) => /^en/i.test(v.lang || ''));
+        const us = en.filter((v) => /^en[-_]US/i.test(v.lang));
+        const others = en.filter((v) => !/^en[-_]US/i.test(v.lang));
+        const restore = readPrefs().voice || 'auto';
+        const option = (v, tag) => '<option value="' + escapeHTML(v.name + '|' + v.lang) + '">' + escapeHTML(v.name) + tag + '</option>';
+        voiceSelect.innerHTML = '<option value="auto">自动 · 美式优先</option>' +
+          us.map((v) => option(v, '（美）')).join('') +
+          others.map((v) => option(v, '（' + escapeHTML(v.lang) + '）')).join('');
+        for (const opt of Array.from(voiceSelect.options)) {
+          if (opt.value === restore) { voiceSelect.value = restore; break; }
+        }
+      }
       if (window.speechSynthesis) {
-        refreshVoice();
-        if ('onvoiceschanged' in window.speechSynthesis) window.speechSynthesis.onvoiceschanged = refreshVoice;
+        rebuildVoiceOptions();
+        if ('onvoiceschanged' in window.speechSynthesis) window.speechSynthesis.onvoiceschanged = rebuildVoiceOptions;
+      }
+      if (voiceSelect) {
+        voiceSelect.addEventListener('change', () => {
+          writePrefs({ voice: voiceSelect.value });
+          const sample = words.length && words[page * size] ? words[page * size].en : 'hello';
+          speak(sample);
+        });
       }
       function speak(text) {
         const synth = window.speechSynthesis;
@@ -214,7 +258,7 @@
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.lang = 'en-US';
           utterance.rate = 0.92;
-          const voice = usVoice || pickVoice();
+          const voice = activeVoice();
           if (voice) utterance.voice = voice;
           synth.speak(utterance);
         } catch (error) { /* speech unsupported */ }
