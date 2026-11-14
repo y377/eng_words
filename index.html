@@ -63,6 +63,12 @@
     .brand-mark svg { width: 17px; height: 17px; }
     .brand-name { font-size: .95rem; font-weight: 720; letter-spacing: .01em; white-space: nowrap; }
     .count { color: var(--accent); font-size: .8rem; font-weight: 680; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .appbar-actions { display: flex; align-items: center; gap: 10px; }
+    .install-btn { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--muted); cursor: pointer; transition: color .16s var(--ease), border-color .16s var(--ease), background .16s var(--ease), transform .16s var(--ease); }
+    .install-btn svg { width: 17px; height: 17px; }
+    .install-btn:hover { color: var(--accent); border-color: var(--faint); }
+    .install-btn:active { transform: scale(.92); }
+    .toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60; max-width: min(90vw, 420px); padding: 10px 16px; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: .8rem; line-height: 1.5; box-shadow: var(--shadow); }
     .controls-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 10px; }
     select { appearance: none; min-height: 42px; min-width: 0; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); font-size: .82rem; font-weight: 620; color: var(--ink); cursor: pointer; transition: border-color .16s var(--ease), background .16s var(--ease); }
     select:hover { border-color: var(--faint); }
@@ -157,7 +163,7 @@
   <div class="top">
     <header class="shell appbar">
       <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5c3.5-1 6.3-.4 8.5 1.5 2.2-1.9 5-2.5 8.5-1.5v13c-3.5-1-6.3-.4-8.5 1.5-2.2-1.9-5-2.5-8.5-1.5z"/><path d="M12 7v13"/></svg></span><span class="brand-name">词汇默写</span></div>
-      <span class="count" id="count" aria-live="polite"></span>
+      <div class="appbar-actions"><span class="count" id="count" aria-live="polite"></span><button class="install-btn" id="installBtn" type="button" aria-label="安装应用到主屏幕" title="安装到主屏幕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0 4-4m-4 4-4-4"/><path d="M5 19h14"/></svg></button></div>
     </header>
     <div class="shell controls-row" aria-label="练习设置">
       <select id="monthSelect" aria-label="词表月份"></select>
@@ -187,6 +193,7 @@
       const rangeInfo = $('#rangeInfo');
       const toggleButton = $('#toggle');
       const voiceSelect = $('#voiceSelect');
+      const installBtn = $('#installBtn');
       let words = [];
       let page = 0;
       let size = 10;
@@ -411,6 +418,39 @@
         writePrefs({ dir: direction });
         render();
       });
+      let deferredPrompt = null;
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      function showToast(text) {
+        const old = document.querySelector('.toast');
+        if (old) old.remove();
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.setAttribute('role', 'status');
+        el.textContent = text;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4000);
+      }
+      window.addEventListener('beforeinstallprompt', (event) => { deferredPrompt = event; });
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        if (installBtn) installBtn.style.display = 'none';
+      });
+      if (installBtn) {
+        installBtn.addEventListener('click', () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choice) => {
+              deferredPrompt = null;
+              if (choice.outcome === 'accepted') { installBtn.style.display = 'none'; }
+              else { showToast('已取消。想安装时再点右上角图标即可。'); }
+            });
+          } else if (isIOS) {
+            showToast('iOS：点浏览器底部的「分享」按钮，再选「添加到主屏幕」。');
+          } else {
+            showToast('用浏览器菜单里的「安装应用 / 将此站点添加到主屏幕」。');
+          }
+        });
+      }
       load(startMonth);
     })();
   </script>
