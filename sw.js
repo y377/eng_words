@@ -2,7 +2,7 @@
    No external requests: same-origin only. */
 'use strict';
 
-const VERSION = 'eng-words-v1';
+const VERSION = 'eng-words-v2-wechat-voice';
 const SHELL = [
   './',
   './index.html',

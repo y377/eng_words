@@ -169,7 +169,7 @@
       <select id="monthSelect" aria-label="词表月份"></select>
       <div class="segmented" id="direction" role="group" aria-label="默写方向"><button type="button" data-dir="en" aria-pressed="true">英 → 中</button><button type="button" data-dir="zh" aria-pressed="false">中 → 英</button></div>
       <select id="pageSize" aria-label="每页条数"><option value="10" selected>10 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="40">40 条</option><option value="50">50 条</option><option value="100">100 条</option></select>
-      <select id="voiceSelect" aria-label="发音声音"></select>
+      <select id="voiceSelect" aria-label="发音声音"><option value="auto" selected>美式发音（音频优先）</option></select>
     </div>
     <div class="track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
   </div>
@@ -221,9 +221,16 @@
         });
         return best;
       }
+      // WeChat/WebViews may omit speechSynthesis or throw while listing voices.
+      // Pre-recorded US audio remains available independently of this API.
+      function availableVoices() {
+        try {
+          const synth = window.speechSynthesis;
+          return synth && typeof synth.getVoices === 'function' ? Array.from(synth.getVoices() || []) : [];
+        } catch (error) { return []; }
+      }
       function activeVoice() {
-        if (!window.speechSynthesis) return null;
-        const voices = window.speechSynthesis.getVoices() || [];
+        const voices = availableVoices();
         const chosen = voiceSelect ? voiceSelect.value : 'auto';
         if (chosen && chosen !== 'auto') {
           const hit = voices.find((v) => v.name + '|' + v.lang === chosen);
@@ -233,23 +240,25 @@
       }
       function rebuildVoiceOptions() {
         if (!voiceSelect) return;
-        const voices = window.speechSynthesis ? (window.speechSynthesis.getVoices() || []) : [];
+        const voices = availableVoices();
         const en = voices.filter((v) => /^en/i.test(v.lang || ''));
         const us = en.filter((v) => /^en[-_]US/i.test(v.lang));
         const others = en.filter((v) => !/^en[-_]US/i.test(v.lang));
         const restore = readPrefs().voice || 'auto';
         const option = (v, tag) => '<option value="' + escapeHTML(v.name + '|' + v.lang) + '">' + escapeHTML(v.name) + tag + '</option>';
-        voiceSelect.innerHTML = '<option value="auto">自动 · 美式优先</option>' +
+        voiceSelect.innerHTML = '<option value="auto">美式发音（音频优先）</option>' +
           us.map((v) => option(v, '（美）')).join('') +
           others.map((v) => option(v, '（' + escapeHTML(v.lang) + '）')).join('');
+        voiceSelect.disabled = en.length === 0;
         for (const opt of Array.from(voiceSelect.options)) {
           if (opt.value === restore) { voiceSelect.value = restore; break; }
         }
       }
-      if (window.speechSynthesis) {
-        rebuildVoiceOptions();
-        if ('onvoiceschanged' in window.speechSynthesis) window.speechSynthesis.onvoiceschanged = rebuildVoiceOptions;
-      }
+      rebuildVoiceOptions();
+      try {
+        const synth = window.speechSynthesis;
+        if (synth && 'onvoiceschanged' in synth) synth.onvoiceschanged = rebuildVoiceOptions;
+      } catch (error) { /* Keep the static US-audio option in restricted WebViews. */ }
       if (voiceSelect) {
         voiceSelect.addEventListener('change', () => {
           writePrefs({ voice: voiceSelect.value });
